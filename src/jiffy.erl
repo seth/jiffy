@@ -24,7 +24,8 @@ encode(Data) ->
     encode(Data, []).
 
 
-encode(Data, Options) ->
+encode(Data0, Options0) ->
+    {Data, Options} = maybe_precode(Data0, Options0),
     case nif_encode(Data, Options) of
         {error, _} = Error ->
             throw(Error);
@@ -67,6 +68,33 @@ finish_decode_arr([V | Vals], Acc) ->
     finish_decode_arr(Vals, [finish_decode(V) | Acc]).
 
 
+maybe_precode(Data, Opts) ->
+    case proplists:get_value(precoder, Opts) of
+        Pre when is_function(Pre, 1) ->
+            {precode(Data, Pre), lists:keydelete(precoder, 1, Opts)};
+        _ ->
+            {Data, Opts}
+    end.
+
+
+precode({Props}, Pre) ->
+    precode_obj(Props, [], Pre);
+precode(Vals, Pre) when is_list(Vals) ->
+    precode_arr(Vals, [], Pre);
+precode(Val, Pre) ->
+    Pre(Val).
+
+precode_obj([], Acc, _Pre) ->
+    {lists:reverse(Acc)};
+precode_obj([{K, V} | Rest], Acc, Pre) ->
+    precode_obj(Rest, [precode({K, precode(V, Pre)}, Pre) | Acc], Pre).
+
+precode_arr([], Acc, _Pre) ->
+    lists:reverse(Acc);
+precode_arr([Val | Rest], Acc, Pre) ->
+    precode_arr(Rest, [precode(Val, Pre) | Acc], Pre).
+
+
 finish_encode([], Acc) ->
     %% No reverse! The NIF returned us
     %% the pieces in reverse order.
@@ -76,8 +104,8 @@ finish_encode([<<_/binary>>=B | Rest], Acc) ->
 finish_encode([Val | Rest], Acc) when is_integer(Val) ->
     Bin = list_to_binary(integer_to_list(Val)),
     finish_encode(Rest, [Bin | Acc]);
-finish_encode(_, _) ->
-    throw({error, invalid_ejson}).
+finish_encode(V, _) ->
+    throw({error, {invalid_ejson, V}}).
 
 
 init() ->

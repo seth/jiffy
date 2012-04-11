@@ -1,5 +1,5 @@
 -module(util).
--export([test_good/1, test_good/2, test_errors/1]).
+-compile(export_all).
 
 test_good(Cases) ->
     test_good(Cases, []).
@@ -9,6 +9,9 @@ test_good(Cases, Options) ->
 
 test_errors(Cases) ->
     lists:foreach(fun(Case) -> check_error(Case) end, Cases).
+
+test_enc_ok(Cases, Options) ->
+    lists:foreach(fun(Case) -> check_enc_ok(Case, Options) end, Cases).
 
 ok_dec(J, _E) ->
     lists:flatten(io_lib:format("Decoded ~p.", [J])).
@@ -41,4 +44,7 @@ check_error(J) ->
         (catch jiffy:decode(J)),
         error_mesg(J)
     ).
+
+check_enc_ok({E, J}, Options) ->
+    etap:is(do_encode(E, Options), J, ok_enc(E, J)).
 

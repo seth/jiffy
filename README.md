@@ -48,6 +48,18 @@ Data Format
     {[{foo, bar}]}             -> {"foo": "bar"} -> {[{<<"foo">>, <<"bar">>}]}
     {[{<<"foo">>, <<"bar">>}]} -> {"foo": "bar"} -> {[{<<"foo">>, <<"bar">>}]}
 
+
+Encoder Options
+---------------
+
+The encoder takes a few options that will affect the JSON output. Most of
+these are fairly simple.
+
+  * `uencode` - Encode all UTF-8 data as `\uXXXX` sequences.
+  * `pretty` - Pretty print the JSON with two-space indents.
+  * `{precoder, Function}` - Pass a function that will convert any unknown
+     Erlang terms into the appropriate format before encoding.
+
 Improvements over EEP0018
 -------------------------
 
