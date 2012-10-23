@@ -15,15 +15,7 @@ distclean: clean
 	git clean -fxd
 
 
-depends:
-	@if test ! -d ./deps; then \
-		$(REBAR) get-deps; \
-	else \
-		$(REBAR) update-deps; \
-	fi
-
-
-build: depends
+build:
 	$(REBAR) compile
 
 
@@ -31,7 +23,8 @@ etap: test/etap.beam test/util.beam
 	prove test/*.t
 
 
-eunit:
+eunit: deps/proper/ebin/proper.beam
+	ERL_COMPILER_OPTIONS="[{d,'JIFFY_DEBUG'}]" \
 	$(REBAR) eunit skip_deps=true
 
 
@@ -40,6 +33,15 @@ check: build etap eunit
 
 %.beam: %.erl
 	erlc -o test/ $<
+
+
+deps/proper/ebin/proper.beam: deps/proper
+	cd proper; $(REBAR) compile
+
+
+deps/proper:
+	mkdir -p deps
+	cd deps; git clone git://github.com/manopapad/proper.git;
 
 
 .PHONY: all clean distclean depends build etap eunit check
