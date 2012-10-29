@@ -25,7 +25,7 @@ etap: test/etap.beam test/util.beam
 
 eunit: deps/proper/ebin/proper.beam
 	ERL_COMPILER_OPTIONS="[{d,'JIFFY_DEBUG'}]" \
-	$(REBAR) eunit skip_deps=true
+	ERL_FLAGS='-pa deps/proper/ebin' $(REBAR) eunit skip_deps=true
 
 
 check: build etap eunit
